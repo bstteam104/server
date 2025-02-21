@@ -69,9 +69,6 @@ export const signup = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         const codeValue = Math.floor(Math.random() * 1000000).toString();
         const hashedCodeValue = hmacProcess(codeValue,process.env.HMAC_VARIFICATION_CODE_SECRET);
-           
-        console.log(hashedCodeValue.Promise)
-
         const newUser = new User({
             email,
             password: hashedPassword,
@@ -88,7 +85,7 @@ export const signup = async (req, res) => {
             html : '<h1>'+ codeValue +'<h1>',
         });
 
-        return res.status(201).json({ success: true, message: "code sent!", user: createUser, emails : info });
+        return res.status(201).json({ success: true, message: "code sent!", user: createUser});
 
 
         // if(info.accepted[0] === existingUser.email) {
@@ -104,5 +101,12 @@ export const signup = async (req, res) => {
     } catch (error) {
         console.log(error)
     }
+
+};
+
+export const signin = async (req, res) => {
+
+    return res.status(200).json({success : true, message : "code sent sent!"})
+
 
 };
