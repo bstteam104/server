@@ -65,13 +65,12 @@ export const signup = async (req, res) => {
         }
 
         // Use doHash for password hashing
-        const saltRounds = 10; // Ensure this is a number
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        // const saltRounds = 10; // Ensure this is a number
+        // const hashedPassword = await bcrypt.hash(password, saltRounds);
         const codeValue = Math.floor(Math.random() * 1000000).toString();
         const hashedCodeValue = hmacProcess(codeValue,process.env.HMAC_VARIFICATION_CODE_SECRET);
         const newUser = new User({
             email,
-            password: hashedPassword,
             verificationCode : codeValue,
             verificationCodeValidation : Date.now(),
         });
