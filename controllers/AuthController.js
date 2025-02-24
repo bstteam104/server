@@ -159,7 +159,9 @@ export const signin = async (req, res) => {
             email : existingUser.email,
             verified : existingUser.verified,
         }, 
-       process.env.TOKEN_SECRET
+       process.env.TOKEN_SECRET,{
+          expiresIn : '8h',
+       }
     );
 
      res.cookie('Authorization', 'Bearer ' + token, {expires : new Date(Date.now() + 8 * 3600000), httpOnly : process.env.NODE_ENV === 'production', secure : process.env.NODE_ENV === 'production'}).json({
@@ -172,5 +174,9 @@ export const signin = async (req, res) => {
         console.log(error)
     }
 
+}
+
+export const signout = async(req, res) => {
+    res.clearCookie('Authorization').status(200).json({success : true, message : "logged out successfully"});
 }
 
