@@ -22,7 +22,7 @@ export const sendVerificationCode = async (req, res) => {
         const existingUser = await User.findOne({ email });
 
         if (existingUser && existingUser.verified) {
-            return res.status(400).json({ success: false, message: "User already exist" });
+            return res.status(409).json({ success: false, message: "User already exist" });
         }
 
         const codeValue = Math.floor(Math.random() * 1000000).toString();
