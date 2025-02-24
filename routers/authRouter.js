@@ -1,10 +1,11 @@
 import express from 'express';
-import { signin, signup } from '../controllers/AuthController.js';
+import { sendVerificationCode, signin, verificationCode } from '../controllers/AuthController.js';
 
 
 const router = express.Router();
 
-router.post("/signup", signup);
+router.post("/send-verification-code", sendVerificationCode);
+router.post("/verify-verification-code", verificationCode);
 router.get("/signin", signin);
 
 export default router;
