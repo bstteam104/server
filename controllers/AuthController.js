@@ -1,8 +1,9 @@
+import jwt from 'jsonwebtoken';
 import transport from '../middlewares/sendMail.js';
-import { RegisterSchema, SignupSchema } from '../middlewares/validator.js';
+import { RegisterSchema, SigninSchema, SignupSchema } from '../middlewares/validator.js';
 import User from '../models/usersModel.js';
-import crypto from 'node:crypto';  // ✅ Correct way for ESM
-import { doHash } from '../utils/hashing.js';
+import crypto, { verify } from 'node:crypto';  // ✅ Correct way for ESM
+import { doHash, doHashValidation } from '../utils/hashing.js';
 
 
 
@@ -20,7 +21,7 @@ export const sendVerificationCode = async (req, res) => {
 
         const existingUser = await User.findOne({ email });
 
-        if(existingUser && existingUser.verified){
+        if (existingUser && existingUser.verified) {
             return res.status(400).json({ success: false, message: "User already exist" });
         }
 
@@ -110,7 +111,7 @@ export const signup = async (req, res) => {
     const phone = req.body.phone;
     const password = req.body.password;
 
-    const { error, value } = RegisterSchema.validate({firstName, lastName, email, phone, password });
+    const { error, value } = RegisterSchema.validate({ firstName, lastName, email, phone, password });
 
     if (error) {
         return res.status(400).json({ success: false, message: error.details[0].message });
@@ -118,7 +119,7 @@ export const signup = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
 
-    const haspassword = await doHash(password, 10); 
+    const haspassword = await doHash(password, 10);
 
     existingUser.firstName = firstName;
     existingUser.lastName = lastName;
@@ -128,3 +129,48 @@ export const signup = async (req, res) => {
     await existingUser.save();
     return res.status(200).json({ success: true, message: "You are register successfully !" });
 };
+
+export const signin = async (req, res) => {
+
+    const { email, password } = req.body;
+
+    try {
+
+        const { error, value } = SigninSchema.validate({ email, password })
+
+        if (error) {
+            return res.status(400).json({ success: false, message: error.details[0].message });
+        }
+
+        const existingUser = await User.findOne({ email }).select("+password");
+
+        if (!existingUser) {
+            return res.status(200).json({ success: false, message: "User does not exist!" });
+        }
+      
+        const result = await doHashValidation(password, existingUser.password)
+
+        if(!result){
+            return res.status(200).json({ success: false, message: "Invalid cordential" });
+        }
+        
+        const token = jwt.sign({
+            userId : existingUser._id,
+            email : existingUser.email,
+            verified : existingUser.verified,
+        }, 
+       process.env.TOKEN_SECRET
+    );
+
+     res.cookie('Authorization', 'Bearer ' + token, {expires : new Date(Date.now() + 8 * 3600000), httpOnly : process.env.NODE_ENV === 'production', secure : process.env.NODE_ENV === 'production'}).json({
+        success : true,
+        token,
+        message : "logged in successfully"
+     })
+
+    } catch (error) {
+        console.log(error)
+    }
+
+}
+

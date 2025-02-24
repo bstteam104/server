@@ -23,3 +23,12 @@ export const RegisterSchema = Joi.object({
     .required(),
   password: Joi.string().min(8).max(50).required(),
 });
+
+export const SigninSchema = Joi.object({
+  email: Joi.string()
+    .min(6)
+    .max(60)
+    .required()
+    .email({ tlds: { allow: ["com", "net"] } }),
+    password: Joi.string().min(8).max(50).required(),
+});

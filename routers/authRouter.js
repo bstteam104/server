@@ -1,5 +1,5 @@
 import express from 'express';
-import { sendVerificationCode, signup, verificationCode } from '../controllers/AuthController.js';
+import { sendVerificationCode, signin, signup, verificationCode } from '../controllers/AuthController.js';
 
 
 const router = express.Router();
@@ -7,5 +7,6 @@ const router = express.Router();
 router.post("/send-verification-code", sendVerificationCode);
 router.post("/verify-verification-code", verificationCode);
 router.post("/signup", signup);
+router.post("/signin", signin);
 
 export default router;
