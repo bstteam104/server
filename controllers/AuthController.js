@@ -96,7 +96,7 @@ export const verificationCode = async (req, res) => {
             return res.status(200).json({ success: true, message: "Your account has been verified !" });
         }
 
-        return res.status(200).json({ success: false, message: "unexpected occured !" });
+        return res.status(400).json({ success: false, message: "unexpected occured !" });
 
     } catch (error) {
         console.log(error)
