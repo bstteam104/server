@@ -5,9 +5,6 @@ import User from '../models/usersModel.js';
 import crypto, { verify } from 'node:crypto';  // ✅ Correct way for ESM
 import { doHash, doHashValidation } from '../utils/hashing.js';
 
-
-
-
 export const sendVerificationCode = async (req, res) => {
 
     const { email } = req.body;
@@ -104,31 +101,36 @@ export const verificationCode = async (req, res) => {
 };
 
 export const signup = async (req, res) => {
+    try {
+        const { firstName, lastName, email, phone, password } = req.body;
 
-    const email = req.body.email;
-    const firstName = req.body.firstName;
-    const lastName = req.body.lastName;
-    const phone = req.body.phone;
-    const password = req.body.password;
+        // Validate request data
+        const { error } = RegisterSchema.validate({ firstName, lastName, email, phone, password });
+        if (error) {
+            return res.status(400).json({ success: false, message: error.details[0].message });
+        }
 
-    const { error, value } = RegisterSchema.validate({ firstName, lastName, email, phone, password });
+        // Check if user exists
+        let existingUser = await User.findOne({ email });
+        if (!existingUser) {
+            return res.status(404).json({ success: false, message: "User not found!" });
+        }
 
-    if (error) {
-        return res.status(400).json({ success: false, message: error.details[0].message });
+        // Hash password
+        const hashedPassword = await doHash(password, 10);
+
+        // Update user details
+        Object.assign(existingUser, { firstName, lastName, phone, password: hashedPassword });
+        await existingUser.save();
+
+        return res.status(200).json({ success: true, message: "You are registered successfully!" });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
     }
-
-    const existingUser = await User.findOne({ email });
-
-    const haspassword = await doHash(password, 10);
-
-    existingUser.firstName = firstName;
-    existingUser.lastName = lastName;
-    existingUser.email = email;
-    existingUser.phone = phone;
-    existingUser.password = haspassword;
-    await existingUser.save();
-    return res.status(200).json({ success: true, message: "You are register successfully !" });
 };
+
+
 
 export const signin = async (req, res) => {
 
@@ -147,28 +149,29 @@ export const signin = async (req, res) => {
         if (!existingUser) {
             return res.status(200).json({ success: false, message: "User does not exist!" });
         }
-      
+
         const result = await doHashValidation(password, existingUser.password)
 
-        if(!result){
+        if (!result) {
             return res.status(200).json({ success: false, message: "Invalid cordential" });
         }
-        
-        const token = jwt.sign({
-            userId : existingUser._id,
-            email : existingUser.email,
-            verified : existingUser.verified,
-        }, 
-       process.env.TOKEN_SECRET,{
-          expiresIn : '8h',
-       }
-    );
 
-     res.cookie('Authorization', 'Bearer ' + token, {expires : new Date(Date.now() + 8 * 3600000), httpOnly : process.env.NODE_ENV === 'production', secure : process.env.NODE_ENV === 'production'}).json({
-        success : true,
-        token,
-        message : "logged in successfully"
-     })
+        const token = jwt.sign({
+            userId: existingUser._id,
+            email: existingUser.email,
+            verified: existingUser.verified,
+        },
+            process.env.TOKEN_SECRET, {
+            expiresIn: '8h',
+        }
+        );
+
+        res.cookie('Authorization', 'Bearer ' + token, { expires: new Date(Date.now() + 8 * 3600000), httpOnly: process.env.NODE_ENV === 'production', secure: process.env.NODE_ENV === 'production' }).json({
+            success: true,
+            token,
+            existingUser,
+            message: "logged in successfully"
+        })
 
     } catch (error) {
         console.log(error)

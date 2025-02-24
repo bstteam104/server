@@ -1,13 +1,16 @@
 export const profile = async (req, res) => {
+    const token = req.headers.authorization;
+
+    if (!token) {
+        return res.status(401).json({ success: false, message: "Access denied. No token provided." });
+    }
+
     try {
-        // The user info is already stored in `req.user` from the middleware
-        res.json({
-            success: true,
-            message: "User profile fetched successfully",
-            user: req.user, // This contains user ID and other claims from the token
-        });
+        const decoded = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
+        req.user = decoded; // Attach user data to the request object
+        next(); // Continue to the next middleware or route handler
     } catch (error) {
-        res.status(500).json({ success: false, message: "Something went wrong" });
+        res.status(401).json({ success: false, message: "Invalid or expired token." });
     }
 }
 
