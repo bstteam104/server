@@ -22,7 +22,7 @@ export const sendVerificationCode = async (req, res) => {
             return res.status(409).json({ success: false, message: "User already exist" });
         }
 
-        const codeValue = Math.floor(Math.random() * 1000000).toString();
+        const codeValue = Math.floor(100000 + Math.random() * 900000).toString();
         const hashedCodeValue = crypto.createHmac("sha256", process.env.HMAC_VARIFICATION_CODE_SECRET).update(codeValue).digest("hex");
 
         let user;
@@ -39,8 +39,7 @@ export const sendVerificationCode = async (req, res) => {
             });
             user = await newUser.save();
         }
-
-        let info = await transport.sendMail({
+        await transport.sendMail({
             from: process.env.NODE_CODE_SENDING_EMAIL_ADDRESS,
             to: email,
             subject: "verification code",
@@ -130,53 +129,125 @@ export const signup = async (req, res) => {
     }
 };
 
-
-
 export const signin = async (req, res) => {
-
     const { email, password } = req.body;
 
     try {
-
-        const { error, value } = SigninSchema.validate({ email, password })
+        // Validate request body
+        const { error, value } = SigninSchema.validate({ email, password });
 
         if (error) {
             return res.status(400).json({ success: false, message: error.details[0].message });
         }
 
-        const existingUser = await User.findOne({ email }).select("+password");
+        // Check if user exists
+        const existingUser = await User.findOne({ email, isAdmin: false }).select("+password");
 
         if (!existingUser) {
-            return res.status(200).json({ success: false, message: "User does not exist!" });
+            return res.status(401).json({ success: false, message: "User does not exist!" });
         }
 
-        const result = await doHashValidation(password, existingUser.password)
-
-        if (!result) {
-            return res.status(200).json({ success: false, message: "Invalid cordential" });
+        if (!existingUser.verified) {
+            return res.status(401).json({ success: false, message: "You are not active!" });
         }
 
-        const token = jwt.sign({
-            userId: existingUser._id,
-            email: existingUser.email,
-            verified: existingUser.verified,
-        },
-            process.env.TOKEN_SECRET, {
-            expiresIn: '8h',
+        // Validate password
+        const isValidPassword = await doHashValidation(password, existingUser.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ success: false, message: "Invalid credentials" });
         }
+
+        // Generate JWT Token
+        const token = jwt.sign(
+            {
+                userId: existingUser._id,
+                email: existingUser.email,
+                verified: existingUser.verified,
+                isAdmin: existingUser.isAdmin,
+            },
+            process.env.TOKEN_SECRET,
+            { expiresIn: '8h' }
         );
 
-        res.cookie('Authorization', 'Bearer ' + token, { expires: new Date(Date.now() + 8 * 3600000), httpOnly: process.env.NODE_ENV === 'production', secure: process.env.NODE_ENV === 'production' }).json({
+        // Set cookie and return response
+        res.cookie('Authorization', 'Bearer ' + token, {
+            expires: new Date(Date.now() + 8 * 3600000), 
+            httpOnly: process.env.NODE_ENV === 'production', 
+            secure: process.env.NODE_ENV === 'production',
+        });
+
+        return res.status(200).json({
             success: true,
             token,
-            existingUser,
-            message: "logged in successfully"
-        })
+            user: existingUser,  // Changed `existingUser` to `user` for clarity
+            message: "Logged in successfully"
+        });
 
     } catch (error) {
-        console.log(error)
+        console.error("Signin Error:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
     }
+};
 
-}
+
+export const adminSignin = async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        // Validate request body
+        const { error, value } = SigninSchema.validate({ email, password });
+
+        if (error) {
+            return res.status(400).json({ success: false, message: error.details[0].message });
+        }
+
+        // Check if user exists
+        const existingUser = await User.findOne({ email, isAdmin: true }).select("+password");
+        
+        if (!existingUser) {
+            return res.status(401).json({ success: false, message: "User does not exist!" });
+        }
+
+        // Validate password
+        const isValidPassword = await doHashValidation(password, existingUser.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ success: false, message: "Invalid credentials" });
+        }
+
+        // Generate JWT Token
+        const token = jwt.sign(
+            {
+                userId: existingUser._id,
+                email: existingUser.email,
+                verified: existingUser.verified,
+                isAdmin: existingUser.isAdmin,
+            },
+            process.env.TOKEN_SECRET,
+            { expiresIn: '8h' }
+        );
+
+        // Set cookie and return response
+        res.cookie('Authorization', 'Bearer ' + token, {
+            expires: new Date(Date.now() + 8 * 3600000), 
+            httpOnly: process.env.NODE_ENV === 'production', 
+            secure: process.env.NODE_ENV === 'production',
+        });
+
+        return res.status(200).json({
+            success: true,
+            token,
+            user: existingUser,  // Changed `existingUser` to `user` for clarity
+            message: "Logged in successfully"
+        });
+
+    } catch (error) {
+        console.error("Signin Error:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+
+
+
 
 

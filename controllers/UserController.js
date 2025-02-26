@@ -1,3 +1,5 @@
+import jwt from "jsonwebtoken";
+
 export const profile = async (req, res) => {
     const token = req.headers.authorization;
 
@@ -6,13 +8,15 @@ export const profile = async (req, res) => {
     }
 
     try {
-        const decoded = jwt.verify(token.replace("Bearer ", ""), process.env.JWT_SECRET);
-        req.user = decoded; // Attach user data to the request object
-        next(); // Continue to the next middleware or route handler
+        const decoded = jwt.verify(token.replace("Bearer ", ""), process.env.TOKEN_SECRET);
+
+
+        return res.status(200).json({ success: true, user : decoded });
     } catch (error) {
-        res.status(401).json({ success: false, message: "Invalid or expired token." });
+        return res.status(401).json({ success: false, message: "Invalid or expired token." });
     }
-}
+};
+
 
 export const signout = async(req, res) => {
     res.clearCookie('Authorization').status(200).json({success : true, message : "logged out successfully"});

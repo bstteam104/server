@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema({
     trim: true,
     select: false,
   },
+  isAdmin: {
+    type: Boolean,
+    default: false,
+  },
   verified: {
     type: Boolean,
     default: false,
