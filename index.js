@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import authRouter from "./routers/authRouter.js";
 import userRouter from "./routers/userRoute.js";
 import adminRouter from "./routers/adminRoute.js";
+import { authMiddleware } from './middlewares/authMiddleware.js';
 
 const app = express();
 
@@ -27,8 +28,8 @@ mongoose
 
 // ✅ Routes must be after middleware
 app.use("/api/auth", authRouter);
-app.use("/api/user", userRouter);
-app.use("/api/admin", adminRouter);
+app.use("/api/user", authMiddleware, userRouter);
+app.use("/api/admin", authMiddleware, adminRouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

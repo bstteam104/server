@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import TokenBlacklist from '../models/TokenBlacklist.js';
 
 export const identifier = (req, res, next) => {
     let token;
@@ -33,3 +34,5 @@ export const identifier = (req, res, next) => {
         return res.status(401).json({ success: false, message: "Invalid token" });
     }
 };
+
+
