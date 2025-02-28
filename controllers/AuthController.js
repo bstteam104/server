@@ -39,12 +39,12 @@ export const sendVerificationCode = async (req, res) => {
             });
             user = await newUser.save();
         }
-        await transport.sendMail({
-            from: process.env.NODE_CODE_SENDING_EMAIL_ADDRESS,
-            to: email,
-            subject: "verification code",
-            html: '<h1>' + codeValue + '<h1>',
-        });
+        // await transport.sendMail({
+        //     from: process.env.NODE_CODE_SENDING_EMAIL_ADDRESS,
+        //     to: email,
+        //     subject: "verification code",
+        //     html: '<h1>' + codeValue + '<h1>',
+        // });
 
         return res.status(201).json({ success: true, message: "code sent!", user });
 
