@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import TokenBlacklist from "../models/TokenBlacklist.js"; // Ensure correct path
+import ExcelData from "../models/excelData.js"; // Ensure correct path
 
 export const profile = async (req, res) => {
     const token = req.headers.authorization;
@@ -41,5 +42,24 @@ export const signout = async (req, res) => {
     } catch (error) {
         console.error("Logout Error:", error.message);
         res.status(500).json({success : false, message: "Error logging out", error: error.message });
+    }
+};
+
+export const excelDataStore = async (req, res) => {
+    try {
+        // Check if required fields are present
+        if (!req.body.userId || !req.body.data) {
+            return res.status(400).json({ success: false, message: "userId and data are required!" });
+        }
+
+        const result = new ExcelData({
+            userId: req.body.userId,
+            data: req.body.data,
+        });
+
+        const dt = await result.save();
+        res.status(201).json({ success: true, message: "Data saved successfully!", data: dt });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error saving data", error: error.message });
     }
 };
