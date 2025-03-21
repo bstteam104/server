@@ -54,7 +54,7 @@ export const excelDataStore = async (req, res) => {
 
         const result = new ExcelData({
             userId: req.body.userId,
-            data: req.body.data,
+            data: JSON.parse(req.body.data.toString()),
         });
 
         const dt = await result.save();
