@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPEN_AI_KEY, // Add your API key in .env
+  apiKey: 'sk-proj-fSSR9owvKMCvnM7wTSoIT3BlbkFJAGcQIOcYG9vr3ODWrGni'
 });
 
 export const getCustomInsight = async (req, res) => {
