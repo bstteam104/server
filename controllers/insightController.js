@@ -14,7 +14,7 @@ export const getInsights = async (req, res) => {
         .json({ success: false, message: "Invalid or empty data provided" });
     }
 
-    const batchSize = 20;
+    const batchSize = 40;
     const allInsights = [];
 
     for (let i = 0; i < data.length; i += batchSize) {
