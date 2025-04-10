@@ -21,7 +21,7 @@ app.use(cookieParser());
 
 
 
-// MongoDB Connection added
+// MongoDB Connection
 
 mongoose
   .connect(process.env.MONGO_URI)
