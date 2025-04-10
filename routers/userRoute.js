@@ -1,8 +1,7 @@
 import express from 'express';
 import { identifier } from '../middlewares/identification.js';
 import {excelDataStore, profile, signout } from '../controllers/UserController.js';
-import {getInsights} from '../controllers/insightController.js'
-import { getCustomInsight } from '../controllers/customInsightController.js';
+import { getCustomInsight,getInsights } from '../controllers/customInsightController.js';
 
 const router = express.Router();
 
