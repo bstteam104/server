@@ -7,6 +7,8 @@ import authRouter from "./routers/authRouter.js";
 import userRouter from "./routers/userRoute.js";
 import adminRouter from "./routers/adminRoute.js";
 import { authMiddleware } from './middlewares/authMiddleware.js';
+import dotenv from 'dotenv'; // if using ES modules
+dotenv.config();
 
 const app = express();
 
