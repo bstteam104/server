@@ -1,8 +1,11 @@
 import OpenAI from "openai";
+import dotenv from 'dotenv';
+dotenv.config();  
 
 const openai = new OpenAI({
-  apiKey: "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"
+  apiKey: process.env.OPEN_AI_KEY, // Add this in your .env
 });
+
 
 export const getCustomInsight = async (req, res) => {
   try {
